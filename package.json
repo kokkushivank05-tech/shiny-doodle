@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "git:sync": "git remote add upstream https://github.com/Sameer200506/merge-2.git 2>nul || true && git fetch upstream main && git merge upstream/main --allow-unrelated-histories -m \"merge: auto-sync with upstream\" && git push origin main"
+    "git:sync": "powershell -ExecutionPolicy RemoteSigned -File sync.ps1"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
