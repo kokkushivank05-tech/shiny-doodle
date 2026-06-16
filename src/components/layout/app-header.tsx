@@ -384,13 +384,7 @@ export function AppHeader() {
     >
       {/* Left */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={toggleSidebar}
-          className="sos-btn sos-btn-ghost p-1.5 md:hidden"
-          aria-label="Toggle menu"
-        >
-          <Menu size={16} />
-        </button>
+
         <Breadcrumb />
       </div>
 
