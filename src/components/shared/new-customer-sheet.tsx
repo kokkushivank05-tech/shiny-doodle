@@ -144,7 +144,7 @@ export function NewCustomerSheet({ open, onClose }: NewCustomerSheetProps) {
                   value={form.website}
                   onChange={(e) => set("website", e.target.value)}
                   placeholder="company.com"
-                  className="sos-input pl-[52px]"
+                  className="sos-input pl-[68px]"
                 />
               </div>
             </div>
