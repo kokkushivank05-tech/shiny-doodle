@@ -81,7 +81,7 @@ function SidebarItem({ href, icon: Icon, label, collapsed, active }: SidebarItem
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { sidebarCollapsed } = useUIStore();
+  const { sidebarCollapsed, sidebarOpen, toggleSidebar } = useUIStore();
   const { user, organization } = useAuthStore();
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -98,13 +98,28 @@ export function AppSidebar() {
 
   const collapsed = !mounted ? true : (sidebarCollapsed && !isHovered);
 
+  // Close sidebar on mobile when navigating
+  useEffect(() => {
+    if (window.innerWidth < 768 && sidebarOpen) {
+      toggleSidebar();
+    }
+  }, [pathname]);
+
   return (
     <>
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in"
+          onClick={toggleSidebar}
+        />
+      )}
       <aside
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "sos-sidebar flex flex-col transition-all duration-200 ease-in-out relative",
+          "sos-sidebar flex flex-col transition-all duration-300 ease-in-out",
+          "fixed md:relative z-50 md:z-auto h-full",
+          !sidebarOpen && "-translate-x-full md:translate-x-0",
           collapsed ? "w-[52px]" : "w-[220px]"
         )}
         style={{ minHeight: "100dvh" }}
