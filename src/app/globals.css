@@ -275,6 +275,16 @@ body {
     border-color: var(--input-focus);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
   }
+
+  /* Remove number input arrows */
+  .sos-input[type="number"]::-webkit-inner-spin-button,
+  .sos-input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .sos-input[type="number"] {
+    -moz-appearance: textfield;
+  }
 }
 
 /* Button variants */
