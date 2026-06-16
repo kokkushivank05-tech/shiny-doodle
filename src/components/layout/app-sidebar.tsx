@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -85,13 +85,18 @@ export function AppSidebar() {
   const { user, organization } = useAuthStore();
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/" || pathname === "/dashboard";
     return pathname.startsWith(href);
   };
 
-  const collapsed = sidebarCollapsed && !isHovered;
+  const collapsed = !mounted ? true : (sidebarCollapsed && !isHovered);
 
   return (
     <>
