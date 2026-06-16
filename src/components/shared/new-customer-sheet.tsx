@@ -134,18 +134,15 @@ export function NewCustomerSheet({ open, onClose }: NewCustomerSheetProps) {
             {/* Website */}
             <div>
               <label className="block text-[12px] font-medium text-[var(--foreground-muted)] mb-1.5">
-                <Globe size={11} className="inline mr-1" />Website
+                Website
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-[var(--foreground-subtle)]">
-                  https://
-                </span>
+                <Globe size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground-subtle)]" />
                 <input
                   value={form.website}
                   onChange={(e) => set("website", e.target.value)}
                   placeholder="company.com"
-                  className="sos-input"
-                  style={{ paddingLeft: "68px" }}
+                  className="sos-input pl-8"
                 />
               </div>
             </div>
