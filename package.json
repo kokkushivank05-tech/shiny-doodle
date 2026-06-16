@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "git:sync": "git fetch upstream && git merge upstream/main --allow-unrelated-histories -m \"merge: auto-sync with upstream\" && git push origin main"
+    "git:sync": "git remote add upstream https://github.com/Sameer200506/merge-2.git 2>nul || true && git fetch upstream main && git merge upstream/main --allow-unrelated-histories -m \"merge: auto-sync with upstream\" && git push origin main"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
