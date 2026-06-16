@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   Search,
@@ -90,6 +90,7 @@ function NotificationsPanel({
   onClearAll: () => void;
   onClearNotif: (id: string) => void;
 }) {
+  const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -161,6 +162,12 @@ function NotificationsPanel({
             return (
               <div
                 key={notif.id}
+                onClick={() => {
+                  if (notif.type === "task_assigned") router.push("/tasks");
+                  else if (notif.type === "deal_won") router.push("/pipeline");
+                  else if (notif.type === "project_update") router.push("/projects");
+                  onClose();
+                }}
                 className={cn(
                   "flex items-start gap-3 px-4 py-3 hover:bg-[var(--background-subtle)] transition-colors cursor-pointer",
                   !notif.isRead && "bg-[var(--primary-subtle)]"
