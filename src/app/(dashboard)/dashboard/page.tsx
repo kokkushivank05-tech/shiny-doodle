@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ReportsSheet } from "@/components/shared/reports-sheet";
 import {
   TrendingUp,
@@ -331,7 +332,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 sos-card p-5">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-[14px] font-semibold text-[var(--foreground)]">Recent Activity</h2>
-            <button className="text-[12px] text-[var(--primary)] hover:underline">View all</button>
+            <Link href="/activity" className="text-[12px] text-[var(--primary)] hover:underline">View all</Link>
           </div>
           <div>
             {mockActivities.map((activity) => (
