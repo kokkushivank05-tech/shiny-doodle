@@ -13,7 +13,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn, formatCurrency, getInitials } from "@/lib/utils";
-import { mockCustomers } from "@/lib/mock-data";
+import { mockCustomers, mockUsers } from "@/lib/mock-data";
 import type { Customer, CustomerStatus } from "@/types";
 import { NewCustomerSheet } from "@/components/shared/new-customer-sheet";
 
@@ -117,46 +117,127 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [newCustomerOpen, setNewCustomerOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [industryFilter, setIndustryFilter] = useState("all");
+  const [ownerFilter, setOwnerFilter] = useState("all");
 
-  const filtered = mockCustomers.filter((c) => {
+  const statsBase = mockCustomers.filter((c) => {
     const matchSearch =
       !search ||
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.website?.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === "all" || c.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchIndustry = industryFilter === "all" || c.industry === industryFilter;
+    const matchOwner = ownerFilter === "all" || c.ownerId === ownerFilter;
+    return matchSearch && matchIndustry && matchOwner;
   });
 
-  const totalRevenue = mockCustomers
+  const filtered = statsBase.filter((c) => {
+    return statusFilter === "all" || c.status === statusFilter;
+  });
+
+  const totalRevenue = statsBase
     .filter((c) => c.status === "customer")
     .reduce((s, c) => s + (c.revenue ?? 0), 0);
+
+  const stats = {
+    total: statsBase.length,
+    leads: statsBase.filter((c) => c.status === "lead").length,
+    prospects: statsBase.filter((c) => c.status === "prospect").length,
+    customers: statsBase.filter((c) => c.status === "customer").length,
+  };
 
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header mb-4">
         <div>
           <h1 className="page-title">Customers</h1>
           <p className="text-[13px] text-[var(--foreground-muted)] mt-0.5">
-            {mockCustomers.length} companies · {formatCurrency(totalRevenue)} total revenue
+            {statsBase.length} companies · {formatCurrency(totalRevenue)} total revenue
           </p>
         </div>
-        <button
-          onClick={() => setNewCustomerOpen(true)}
-          className="sos-btn sos-btn-primary"
-        >
-          <Plus size={14} />
-          Add Customer
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
+            <Filter size={12} /> Filter
+          </button>
+          <button
+            onClick={() => setNewCustomerOpen(true)}
+            className="sos-btn sos-btn-primary"
+          >
+            <Plus size={14} /> Add Customer
+          </button>
+        </div>
       </div>
+
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="lead">Lead</option>
+              <option value="prospect">Prospect</option>
+              <option value="customer">Customer</option>
+              <option value="churned">Churned</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Industry:</span>
+            <select
+              value={industryFilter}
+              onChange={(e) => setIndustryFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Industries</option>
+              <option value="technology">Technology</option>
+              <option value="finance">Finance</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Owner:</span>
+            <select
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Owners</option>
+              {mockUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.displayName}</option>
+              ))}
+            </select>
+          </div>
+
+          {(statusFilter !== "all" || industryFilter !== "all" || ownerFilter !== "all") && (
+            <button
+              onClick={() => { setStatusFilter("all"); setIndustryFilter("all"); setOwnerFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {[
-          { label: "Total", value: mockCustomers.length, color: "var(--primary)" },
-          { label: "Leads", value: mockCustomers.filter((c) => c.status === "lead").length, color: "#3b82f6" },
-          { label: "Prospects", value: mockCustomers.filter((c) => c.status === "prospect").length, color: "#f59e0b" },
-          { label: "Customers", value: mockCustomers.filter((c) => c.status === "customer").length, color: "#22c55e" },
+          { label: "Total", value: stats.total, color: "var(--primary)" },
+          { label: "Leads", value: stats.leads, color: "#3b82f6" },
+          { label: "Prospects", value: stats.prospects, color: "#f59e0b" },
+          { label: "Customers", value: stats.customers, color: "#22c55e" },
         ].map((stat) => (
           <div key={stat.label} className="sos-card px-4 py-3">
             <p className="text-[22px] font-bold" style={{ color: stat.color }}>{stat.value}</p>
@@ -194,7 +275,13 @@ export default function CustomersPage() {
               </button>
             ))}
           </div>
-          <button className="sos-btn sos-btn-ghost py-1 px-2 ml-auto">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-ghost py-1 px-2 ml-auto cursor-pointer",
+              filterOpen && "text-[var(--primary)] font-semibold"
+            )}
+          >
             <Filter size={13} />
             <span className="hidden sm:inline text-[12.5px]">Filter</span>
           </button>

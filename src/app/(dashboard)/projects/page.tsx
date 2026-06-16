@@ -17,7 +17,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn, formatDate, getInitials } from "@/lib/utils";
-import { mockProjects, mockCustomers, getUserById } from "@/lib/mock-data";
+import { mockProjects, mockCustomers, getUserById, mockUsers } from "@/lib/mock-data";
 import type { ProjectStatus } from "@/types";
 import { NewProjectSheet } from "@/components/shared/new-project-sheet";
 
@@ -126,14 +126,25 @@ function ProjectCard({ project }: { project: (typeof mockProjects)[0] }) {
 export default function ProjectsPage() {
   const [filter, setFilter] = useState<"all" | ProjectStatus>("all");
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const statsBase = mockProjects.filter((p) => {
+    const matchPriority = priorityFilter === "all" || p.priority === priorityFilter;
+    const matchOwner = ownerFilter === "all" || p.ownerId === ownerFilter;
+    return matchPriority && matchOwner;
+  });
 
-  const filtered = filter === "all" ? mockProjects : mockProjects.filter((p) => p.status === filter);
   const stats = {
-    total: mockProjects.length,
-    active: mockProjects.filter((p) => p.status === "active").length,
-    review: mockProjects.filter((p) => p.status === "review").length,
-    completed: mockProjects.filter((p) => p.status === "completed").length,
+    total: statsBase.length,
+    active: statsBase.filter((p) => p.status === "active").length,
+    review: statsBase.filter((p) => p.status === "review").length,
+    completed: statsBase.filter((p) => p.status === "completed").length,
   };
+
+  const filtered = statsBase.filter((p) => {
+    return filter === "all" || p.status === filter;
+  });
 
   return (
     <div className="animate-fade-in">
@@ -146,7 +157,13 @@ export default function ProjectsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px]">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
             <Filter size={12} /> Filter
           </button>
           <button
@@ -157,6 +174,49 @@ export default function ProjectsPage() {
           </button>
         </div>
       </div>
+
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Priority:</span>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Project PM:</span>
+            <select
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Managers</option>
+              {mockUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.displayName}</option>
+              ))}
+            </select>
+          </div>
+
+          {(priorityFilter !== "all" || ownerFilter !== "all") && (
+            <button
+              onClick={() => { setPriorityFilter("all"); setOwnerFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
