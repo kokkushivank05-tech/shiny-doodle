@@ -370,7 +370,7 @@ export function AppHeader() {
         {/* Search icon — mobile */}
         <button
           onClick={() => setCommandOpen(true)}
-          className="sos-btn sos-btn-ghost p-1.5 sm:hidden"
+          className="sos-btn sos-btn-ghost p-1.5 sm:!hidden"
           aria-label="Search"
         >
           <Search size={16} />
