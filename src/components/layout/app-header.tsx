@@ -229,7 +229,7 @@ function UserMenu({
   onClose: () => void;
   anchorRef: React.RefObject<HTMLButtonElement | null>;
 }) {
-  const { user, organization } = useAuthStore();
+  const { user, organization, logout } = useAuthStore();
   const { theme, toggleTheme } = useUIStore();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -326,7 +326,10 @@ function UserMenu({
       {/* Sign out */}
       <div className="py-1 border-t border-[var(--border)]">
         <button
-          onClick={onClose}
+          onClick={() => {
+            logout();
+            onClose();
+          }}
           className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[var(--danger)] hover:bg-[var(--danger-subtle)] transition-colors"
         >
           <LogOut size={14} />
