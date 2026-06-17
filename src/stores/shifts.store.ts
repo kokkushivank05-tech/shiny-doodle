@@ -37,6 +37,30 @@ const INITIAL_MOCK_SHIFTS: Shift[] = [
     durationSeconds: 28800,
     isCompleted: true,
   },
+  {
+    id: "shift_5",
+    userId: "user_1", // Alex Morgan
+    startTime: "2026-06-14T09:00:00.000Z",
+    endTime: "2026-06-14T17:00:00.000Z",
+    durationSeconds: 28800, // 8 hours
+    isCompleted: true,
+  },
+  {
+    id: "shift_6",
+    userId: "user_1", // Alex Morgan
+    startTime: "2026-06-15T08:45:00.000Z",
+    endTime: "2026-06-15T17:15:00.000Z",
+    durationSeconds: 30600, // 8.5 hours
+    isCompleted: true,
+  },
+  {
+    id: "shift_7",
+    userId: "user_1", // Alex Morgan
+    startTime: "2026-06-16T09:15:00.000Z",
+    endTime: "2026-06-16T18:00:00.000Z",
+    durationSeconds: 31500, // 8.75 hours
+    isCompleted: true,
+  },
 ];
 
 interface ShiftsState {
