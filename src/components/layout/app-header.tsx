@@ -555,95 +555,96 @@ export function AppHeader() {
           <Search size={16} />
         </button>
 
-        {/* Shift Timer or Employee Shift Hours */}
+        {/* Shift Controls */}
         {user && (
-          user.role !== "team_member" ? (
-            <div className="relative">
-              <button
-                ref={staffShiftsRef}
-                onClick={toggleStaffShifts}
-                className={cn(
-                  "flex items-center gap-2 bg-[var(--background-muted)] border rounded-lg p-1 px-2.5 h-8 transition-colors cursor-pointer",
-                  staffShiftsOpen ? "border-[var(--primary)]" : "border-[var(--border)] hover:border-[var(--border-strong)]"
-                )}
-                title="View Staff Shifts"
-              >
-                {activeShifts.length > 0 ? (
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                )}
-                <span className="text-[12px] font-medium text-[var(--foreground-muted)]">
-                  Staff Time
-                </span>
-              </button>
-              <StaffShiftsPanel
-                open={staffShiftsOpen}
-                onClose={() => setStaffShiftsOpen(false)}
-                anchorRef={staffShiftsRef}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              {/* Total Work Time Pill */}
-              <div className="hidden sm:flex items-center gap-1.5 bg-[var(--background-subtle)] border border-[var(--border)] rounded-lg px-2.5 h-8">
-                <span className="text-[10.5px] text-[var(--foreground-subtle)] uppercase tracking-wider font-bold">Total</span>
-                <span className="text-[12.5px] font-mono font-medium text-[var(--foreground)]">
-                  {(() => {
-                    const myTotalSeconds = shifts.filter(s => s.userId === user.id).reduce((acc, s) => acc + s.durationSeconds, 0) + (activeShift?.durationSeconds || 0);
-                    return formatDuration(myTotalSeconds);
-                  })()}
-                </span>
-              </div>
-              
-              {/* Active Shift Control */}
-              <div className="flex items-center gap-2 bg-[var(--background-muted)] border border-[var(--border)] rounded-lg p-1 px-2.5 h-8">
-                {isClockedIn ? (
-                  <>
+          <div className="flex items-center gap-3">
+            {/* Staff Time Dropdown (Managers only) */}
+            {user.role !== "team_member" && (
+              <div className="relative">
+                <button
+                  ref={staffShiftsRef}
+                  onClick={toggleStaffShifts}
+                  className={cn(
+                    "flex items-center gap-2 bg-[var(--background-muted)] border rounded-lg p-1 px-2.5 h-8 transition-colors cursor-pointer",
+                    staffShiftsOpen ? "border-[var(--primary)]" : "border-[var(--border)] hover:border-[var(--border-strong)]"
+                  )}
+                  title="View Staff Shifts"
+                >
+                  {activeShifts.length > 0 ? (
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span className="font-mono text-[12.5px] font-semibold text-[var(--foreground)] w-16 text-center">
-                      {activeShift ? formatDuration(activeShift.durationSeconds) : "00:00:00"}
-                    </span>
-                    <button
-                      onClick={() => {
-                        clockOut(user.id);
-                        toast.success("Clocked out of shift successfully.");
-                      }}
-                      className="sos-btn sos-btn-ghost p-1 text-red-500 hover:bg-red-500/10 rounded-md cursor-pointer flex items-center justify-center"
-                      title="Clock Out"
-                      aria-label="Clock Out"
-                    >
-                      <Square size={11} fill="currentColor" />
-                    </button>
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                    <span className="text-[12px] font-medium text-[var(--foreground-muted)]">
-                      Off Shift
-                    </span>
-                    <button
-                      onClick={() => {
-                        clockIn(user.id);
-                        toast.success("Clocked in to shift successfully!");
-                      }}
-                      className="sos-btn sos-btn-ghost p-1 text-[#6366f1] hover:bg-[#6366f1]/10 rounded-md cursor-pointer flex items-center justify-center"
-                      title="Clock In"
-                      aria-label="Clock In"
-                    >
-                      <Play size={11} fill="currentColor" />
-                    </button>
-                  </>
-                )}
+                  )}
+                  <span className="text-[12px] font-medium text-[var(--foreground-muted)]">
+                    Staff Time
+                  </span>
+                </button>
+                <StaffShiftsPanel
+                  open={staffShiftsOpen}
+                  onClose={() => setStaffShiftsOpen(false)}
+                  anchorRef={staffShiftsRef}
+                />
               </div>
+            )}
+
+            {/* Total Work Time Pill */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-[var(--background-subtle)] border border-[var(--border)] rounded-lg px-2.5 h-8">
+              <span className="text-[10.5px] text-[var(--foreground-subtle)] uppercase tracking-wider font-bold">Total</span>
+              <span className="text-[12.5px] font-mono font-medium text-[var(--foreground)]">
+                {(() => {
+                  const myTotalSeconds = shifts.filter(s => s.userId === user.id).reduce((acc, s) => acc + s.durationSeconds, 0) + (activeShift?.durationSeconds || 0);
+                  return formatDuration(myTotalSeconds);
+                })()}
+              </span>
             </div>
-          )
+            
+            {/* Active Shift Control */}
+            <div className="flex items-center gap-2 bg-[var(--background-muted)] border border-[var(--border)] rounded-lg p-1 px-2.5 h-8">
+              {isClockedIn ? (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="font-mono text-[12.5px] font-semibold text-[var(--foreground)] w-16 text-center">
+                    {activeShift ? formatDuration(activeShift.durationSeconds) : "00:00:00"}
+                  </span>
+                  <button
+                    onClick={() => {
+                      clockOut(user.id);
+                      toast.success("Clocked out of shift successfully.");
+                    }}
+                    className="sos-btn sos-btn-ghost p-1 text-red-500 hover:bg-red-500/10 rounded-md cursor-pointer flex items-center justify-center"
+                    title="Clock Out"
+                    aria-label="Clock Out"
+                  >
+                    <Square size={11} fill="currentColor" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                  <span className="text-[12px] font-medium text-[var(--foreground-muted)]">
+                    Off Shift
+                  </span>
+                  <button
+                    onClick={() => {
+                      clockIn(user.id);
+                      toast.success("Clocked in to shift successfully!");
+                    }}
+                    className="sos-btn sos-btn-ghost p-1 text-[#6366f1] hover:bg-[#6366f1]/10 rounded-md cursor-pointer flex items-center justify-center"
+                    title="Clock In"
+                    aria-label="Clock In"
+                  >
+                    <Play size={11} fill="currentColor" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Notifications */}
