@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { NewTaskSheet } from "@/components/shared/new-task-sheet";
+import { ActionMenu } from "@/components/shared/action-menu";
+import { toast } from "sonner";
 import {
   Plus,
   Filter,
@@ -21,6 +23,8 @@ import {
   Paperclip,
   MessageSquare,
   ArrowRight,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   DndContext,
@@ -39,7 +43,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn, formatDate, getInitials } from "@/lib/utils";
-import { mockTasks, getUserById, mockProjects } from "@/lib/mock-data";
+import { mockTasks, getUserById, mockProjects, mockUsers } from "@/lib/mock-data";
 import type { Task, TaskStatus, TaskPriority } from "@/types";
 
 const statusConfig: Record<TaskStatus, { label: string; icon: React.ElementType; color: string }> = {
@@ -98,9 +102,12 @@ function TaskRow({ task }: { task: Task }) {
           {getInitials(assignee.displayName)}
         </div>
       )}
-      <button className="sos-btn sos-btn-ghost p-1 opacity-0 group-hover:opacity-100">
-        <MoreHorizontal size={13} />
-      </button>
+      <div className="opacity-0 group-hover:opacity-100">
+        <ActionMenu actions={[
+          { label: "Edit Task", icon: Pencil, onClick: () => toast.info("Edit task feature coming soon") },
+          { label: "Delete Task", icon: Trash2, danger: true, onClick: () => toast.success("Task deleted") },
+        ]} />
+      </div>
     </div>
   );
 }
@@ -207,6 +214,10 @@ export default function TasksPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [newTaskDefaultStatus, setNewTaskDefaultStatus] = useState<TaskStatus>("todo");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const openNewTask = (status: TaskStatus = "todo") => {
     setNewTaskDefaultStatus(status);
@@ -215,9 +226,13 @@ export default function TasksPage() {
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const filtered = tasks.filter((t) =>
-    !search || t.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = tasks.filter((t) => {
+    const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase());
+    const matchPriority = priorityFilter === "all" || t.priority === priorityFilter;
+    const matchType = typeFilter === "all" || t.type === typeFilter;
+    const matchAssignee = assigneeFilter === "all" || (assigneeFilter === "unassigned" ? !t.assigneeId : t.assigneeId === assigneeFilter);
+    return matchSearch && matchPriority && matchType && matchAssignee;
+  });
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id));
   const handleDragEnd = (e: DragEndEvent) => {
@@ -261,7 +276,13 @@ export default function TasksPage() {
               </button>
             ))}
           </div>
-          <button className="sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px]">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
             <Filter size={12} /> Filter
           </button>
           <button
@@ -272,6 +293,65 @@ export default function TasksPage() {
           </button>
         </div>
       </div>
+
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Priority:</span>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Type:</span>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Types</option>
+              <option value="project">Project</option>
+              <option value="sales">Sales</option>
+              <option value="support">Support</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Assignee:</span>
+            <select
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Assignees</option>
+              <option value="unassigned">Unassigned</option>
+              {mockUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.displayName}</option>
+              ))}
+            </select>
+          </div>
+
+          {(priorityFilter !== "all" || typeFilter !== "all" || assigneeFilter !== "all") && (
+            <button
+              onClick={() => { setPriorityFilter("all"); setTypeFilter("all"); setAssigneeFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative mb-4 max-w-xs">

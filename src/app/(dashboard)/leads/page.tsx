@@ -61,6 +61,7 @@ export default function LeadsPage() {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [newLeadOpen, setNewLeadOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   
   // Track which row is expanded to show notes/details
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -68,24 +69,27 @@ export default function LeadsPage() {
   // Track open dropdowns
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  const filtered = leads.filter((lead) => {
+  const statsBase = leads.filter((lead) => {
     const matchSearch =
       !search ||
       lead.name.toLowerCase().includes(search.toLowerCase()) ||
       lead.contactName.toLowerCase().includes(search.toLowerCase()) ||
       lead.email.toLowerCase().includes(search.toLowerCase());
     
-    const matchStatus = statusFilter === "all" || lead.status === statusFilter;
     const matchSource = sourceFilter === "all" || lead.source === sourceFilter;
     
-    return matchSearch && matchStatus && matchSource;
+    return matchSearch && matchSource;
+  });
+
+  const filtered = statsBase.filter((lead) => {
+    return statusFilter === "all" || lead.status === statusFilter;
   });
 
   // Calculate metrics
-  const totalLeadsCount = leads.length;
-  const newLeadsCount = leads.filter((l) => l.status === "new").length;
-  const qualifiedLeadsCount = leads.filter((l) => l.status === "qualified").length;
-  const estPipelineValue = leads
+  const totalLeadsCount = statsBase.length;
+  const newLeadsCount = statsBase.filter((l) => l.status === "new").length;
+  const qualifiedLeadsCount = statsBase.filter((l) => l.status === "qualified").length;
+  const estPipelineValue = statsBase
     .filter((l) => l.status === "qualified" || l.status === "nurturing")
     .reduce((sum, l) => sum + l.value, 0);
 
@@ -110,7 +114,7 @@ export default function LeadsPage() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header mb-4">
         <div>
           <h1 className="page-title flex items-center gap-2">
             <Target className="text-[var(--primary)]" size={24} />
@@ -121,6 +125,15 @@ export default function LeadsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
+            <Filter size={12} /> Filter
+          </button>
           <button
             onClick={() => setImportOpen(true)}
             className="sos-btn border border-[var(--border-strong)] bg-[var(--background-muted)] hover:bg-[var(--background-subtle)] text-[13px] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
@@ -137,6 +150,53 @@ export default function LeadsPage() {
           </button>
         </div>
       </div>
+
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="qualified">Qualified</option>
+              <option value="nurturing">Nurturing</option>
+              <option value="unqualified">Unqualified</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Source:</span>
+            <select
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Sources</option>
+              <option value="web">Web</option>
+              <option value="referral">Referral</option>
+              <option value="cold_outreach">Outreach</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="partner">Partner</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {(statusFilter !== "all" || sourceFilter !== "all") && (
+            <button
+              onClick={() => { setStatusFilter("all"); setSourceFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -171,45 +231,6 @@ export default function LeadsPage() {
               placeholder="Search leads..."
               className="sos-input pl-8 py-1.5 text-[13px]"
             />
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Status Button Group */}
-            <div className="flex items-center gap-1 bg-[var(--background-muted)] p-1 rounded-lg border border-[var(--border)]">
-              {STATUS_FILTERS.map((f) => (
-                <button
-                  key={f.value}
-                  onClick={() => setStatusFilter(f.value)}
-                  className={cn(
-                    "text-[11.5px] px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer",
-                    statusFilter === f.value
-                      ? "bg-[var(--background)] text-[var(--foreground)] shadow-sm font-semibold"
-                      : "text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Source Select */}
-            <div className="relative">
-              <select
-                value={sourceFilter}
-                onChange={(e) => setSourceFilter(e.target.value)}
-                className="sos-input py-1.5 pl-3 pr-7 text-[12.5px] bg-[var(--background)] border border-[var(--border)] rounded-lg appearance-none cursor-pointer"
-              >
-                <option value="all">All Sources</option>
-                <option value="web">Web</option>
-                <option value="referral">Referral</option>
-                <option value="cold_outreach">Outreach</option>
-                <option value="linkedin">LinkedIn</option>
-                <option value="partner">Partner</option>
-                <option value="other">Other</option>
-              </select>
-              <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--foreground-subtle)] pointer-events-none" />
-            </div>
           </div>
         </div>
 

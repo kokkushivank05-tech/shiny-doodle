@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { NewDealSheet } from "@/components/shared/new-deal-sheet";
+import { ActionMenu } from "@/components/shared/action-menu";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Plus,
@@ -18,6 +20,8 @@ import {
   ChevronDown,
   Filter,
   Tag,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   DndContext,
@@ -36,9 +40,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn, formatCurrency, formatDate, getInitials } from "@/lib/utils";
-import { mockDeals, mockPipeline, mockCustomers, getUserById } from "@/lib/mock-data";
+import { mockDeals, mockPipeline, mockCustomers, getUserById, mockUsers } from "@/lib/mock-data";
 import type { Deal, DealPriority } from "@/types";
-import { useState as useStateGlobal } from "react";
 
 const priorityConfig: Record<DealPriority, { label: string; color: string; dot: string }> = {
   critical: { label: "Critical", color: "text-red-500", dot: "bg-red-500" },
@@ -92,9 +95,10 @@ function DealCard({
           <button {...listeners} className="p-0.5 text-[var(--foreground-subtle)] hover:text-[var(--foreground)] cursor-grab active:cursor-grabbing">
             <Grip size={12} />
           </button>
-          <button className="p-0.5 text-[var(--foreground-subtle)] hover:text-[var(--foreground)]">
-            <MoreHorizontal size={13} />
-          </button>
+          <ActionMenu actions={[
+            { label: "Edit Deal", icon: Pencil, onClick: () => toast.info("Edit deal feature coming soon") },
+            { label: "Delete Deal", icon: Trash2, danger: true, onClick: () => toast.success("Deal deleted") },
+          ]} />
         </div>
       </div>
 
@@ -242,6 +246,15 @@ export default function PipelinePage() {
   const [deals, setDeals] = useState(mockDeals);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [newDealOpen, setNewDealOpen] = useState(false);
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const filteredDeals = deals.filter((d) => {
+    const matchPriority = priorityFilter === "all" || d.priority === priorityFilter;
+    const matchOwner = ownerFilter === "all" || d.ownerId === ownerFilter;
+    return matchPriority && matchOwner;
+  });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -299,7 +312,13 @@ export default function PipelinePage() {
               </button>
             ))}
           </div>
-          <button className="sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px]">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
             <Filter size={12} /> Filter
           </button>
           <button
@@ -311,10 +330,53 @@ export default function PipelinePage() {
         </div>
       </div>
 
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Priority:</span>
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Priorities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Owner:</span>
+            <select
+              value={ownerFilter}
+              onChange={(e) => setOwnerFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Owners</option>
+              {mockUsers.map((u) => (
+                <option key={u.id} value={u.id}>{u.displayName}</option>
+              ))}
+            </select>
+          </div>
+
+          {(priorityFilter !== "all" || ownerFilter !== "all") && (
+            <button
+              onClick={() => { setPriorityFilter("all"); setOwnerFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Revenue bar */}
       <div className="flex items-center gap-4 mb-4 p-3 sos-card">
         {mockPipeline.stages.slice(0, 5).map((stage) => {
-          const stageValue = deals
+          const stageValue = filteredDeals
             .filter((d) => d.stageId === stage.id)
             .reduce((s, d) => s + d.value, 0);
           return (
@@ -342,7 +404,7 @@ export default function PipelinePage() {
                 stageId={stage.id}
                 title={stage.name}
                 color={stage.color}
-                deals={deals.filter((d) => d.stageId === stage.id)}
+                deals={filteredDeals.filter((d) => d.stageId === stage.id)}
               />
             ))}
           </div>
@@ -351,7 +413,7 @@ export default function PipelinePage() {
           </DragOverlay>
         </DndContext>
       ) : (
-        <TableView deals={deals} />
+        <TableView deals={filteredDeals} />
       )}
 
       <NewDealSheet open={newDealOpen} onClose={() => setNewDealOpen(false)} />

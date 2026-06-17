@@ -42,24 +42,84 @@ const entityConfig: Record<string, { icon: React.ElementType }> = {
 export default function ActivityPage() {
   const [search, setSearch] = useState("");
   const [entityFilter, setEntityFilter] = useState("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [activityTypeFilter, setActivityTypeFilter] = useState("all");
 
   const filtered = mockActivities.filter((a) => {
     const matchSearch = !search || a.entityName.toLowerCase().includes(search.toLowerCase()) || a.comment?.toLowerCase().includes(search.toLowerCase());
     const matchEntity = entityFilter === "all" || a.entityType === entityFilter;
-    return matchSearch && matchEntity;
+    const matchActivityType = activityTypeFilter === "all" || a.type === activityTypeFilter;
+    return matchSearch && matchEntity && matchActivityType;
   });
 
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header mb-4">
         <div>
           <h1 className="page-title">Activity Feed</h1>
           <p className="text-[13px] text-[var(--foreground-muted)] mt-0.5">
             Unified timeline across all entities
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilterOpen(!filterOpen)}
+            className={cn(
+              "sos-btn sos-btn-outline py-1.5 px-3 text-[12.5px] cursor-pointer",
+              filterOpen && "bg-[var(--background-muted)] border-[var(--border-strong)]"
+            )}
+          >
+            <Filter size={12} /> Filter
+          </button>
+        </div>
       </div>
+
+      {/* Filter tab controls */}
+      {filterOpen && (
+        <div className="flex items-center gap-4 p-3 mb-4 sos-card bg-[var(--background-subtle)] border border-[var(--border)] rounded-xl animate-fade-in flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Entity Type:</span>
+            <select
+              value={entityFilter}
+              onChange={(e) => setEntityFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Entities</option>
+              <option value="customer">Customer</option>
+              <option value="deal">Deal</option>
+              <option value="project">Project</option>
+              <option value="task">Task</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] font-medium text-[var(--foreground-muted)]">Activity Type:</span>
+            <select
+              value={activityTypeFilter}
+              onChange={(e) => setActivityTypeFilter(e.target.value)}
+              className="sos-input py-1 px-2.5 text-[12.5px] rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer"
+            >
+              <option value="all">All Activities</option>
+              <option value="created">Created</option>
+              <option value="updated">Updated</option>
+              <option value="commented">Commented</option>
+              <option value="status_changed">Status Changed</option>
+              <option value="deal_won">Deal Won</option>
+              <option value="task_completed">Task Completed</option>
+            </select>
+          </div>
+
+          {(entityFilter !== "all" || activityTypeFilter !== "all") && (
+            <button
+              onClick={() => { setEntityFilter("all"); setActivityTypeFilter("all"); }}
+              className="text-[12px] text-[var(--primary)] hover:underline ml-auto cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         {/* Feed */}
@@ -74,20 +134,6 @@ export default function ActivityPage() {
                 placeholder="Search activity..."
                 className="sos-input pl-8 py-1.5 text-[13px]"
               />
-            </div>
-            <div className="flex items-center gap-1">
-              {["all", "customer", "deal", "project", "task"].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setEntityFilter(f)}
-                  className={cn(
-                    "text-[12px] px-3 py-1 rounded-md font-medium transition-colors capitalize",
-                    entityFilter === f ? "bg-[var(--primary)] text-white" : "text-[var(--foreground-muted)] hover:bg-[var(--background-muted)]"
-                  )}
-                >
-                  {f}
-                </button>
-              ))}
             </div>
           </div>
 
