@@ -98,10 +98,15 @@ export function AppSidebar() {
   const { user, organization } = useAuthStore();
   const [newDealOpen, setNewDealOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const showNewDeal = user?.role === "owner" || user?.role === "sales_manager";
@@ -122,7 +127,7 @@ export function AppSidebar() {
     return pathname.startsWith(href);
   };
 
-  const collapsed = !mounted ? true : (sidebarCollapsed && !isHovered);
+  const collapsed = !mounted ? true : (!isMobile && sidebarCollapsed && !isHovered);
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
@@ -144,7 +149,7 @@ export function AppSidebar() {
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
           "sos-sidebar flex flex-col transition-all duration-300 ease-in-out",
-          "fixed md:relative z-50 md:z-auto h-full",
+          "fixed inset-y-0 left-0 md:relative z-50 md:z-auto h-full",
           !sidebarOpen && "-translate-x-full md:translate-x-0",
           collapsed ? "w-[52px]" : "w-[220px]"
         )}
