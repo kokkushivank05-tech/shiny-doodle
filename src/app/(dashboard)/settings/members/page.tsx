@@ -22,7 +22,8 @@ import {
 import { cn, getInitials } from "@/lib/utils";
 import { mockUsers } from "@/lib/mock-data";
 import { toast } from "sonner";
-import type { UserRole } from "@/types";
+import type { UserRole, User } from "@/types";
+import { useAuthStore } from "@/stores/auth.store";
 
 // ── Role config ───────────────────────────────────────────────
 const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; color: string }> = {
@@ -32,11 +33,12 @@ const roleConfig: Record<UserRole, { label: string; icon: React.ElementType; col
   sales_manager:   { label: "Sales Manager",   icon: Briefcase,   color: "#3b82f6" },
   project_manager: { label: "Project Manager", icon: FolderKanban, color: "#22c55e" },
   team_member:  { label: "Team Member", icon: User,           color: "#64748b" },
+  intern:       { label: "Intern",      icon: User,           color: "#0ea5e9" },
   client:       { label: "Client",      icon: Eye,            color: "#94a3b8" },
 };
 
 const ASSIGNABLE_ROLES: UserRole[] = [
-  "admin", "sales_manager", "project_manager", "team_member", "client",
+  "admin", "sales_manager", "project_manager", "team_member", "intern", "client",
 ];
 
 // ── Member row dropdown ───────────────────────────────────────
@@ -229,18 +231,45 @@ function EditRoleModal({ user, currentRole, onClose, onSave }: EditRoleModalProp
 
 // ── Main page ─────────────────────────────────────────────────
 export default function MembersSettingsPage() {
+  const { user } = useAuthStore();
+  const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<UserRole>("team_member");
   const [inviting, setInviting] = useState(false);
   const [members, setMembers] = useState(mockUsers);
   const [editingUser, setEditingUser] = useState<(typeof mockUsers)[0] | null>(null);
 
   const handleInvite = async () => {
-    if (!inviteEmail) return;
+    if (!inviteEmail || !inviteName) {
+      toast.error("Please enter both name and email");
+      return;
+    }
     setInviting(true);
     await new Promise((r) => setTimeout(r, 800));
+    
+    const newUser: User = {
+      id: `user_${Date.now()}`,
+      organizationId: "org_1",
+      createdBy: "system",
+      updatedBy: "system",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      firebaseUid: `mock_${Date.now()}`,
+      email: inviteEmail,
+      displayName: inviteName,
+      role: inviteRole,
+      isActive: true,
+      notificationPreferences: {
+        inApp: true, email: true, push: false, taskAssigned: true, dealUpdates: true, mentions: true, dueDates: true, comments: true
+      }
+    };
+
+    setMembers((prev) => [...prev, newUser]);
     setInviting(false);
     setInviteEmail("");
-    toast.success(`Invitation sent to ${inviteEmail}`);
+    setInviteName("");
+    setInviteRole("team_member");
+    toast.success(`Employee ${inviteName} added successfully`);
   };
 
   const handleToggleActive = (userId: string) => {
@@ -282,36 +311,48 @@ export default function MembersSettingsPage() {
 
   return (
     <div className="space-y-4">
-      {/* Invite */}
-      <div className="sos-card p-5">
-        <h2 className="text-[14px] font-semibold text-[var(--foreground)] mb-1">Invite Team Members</h2>
-        <p className="text-[12.5px] text-[var(--foreground-muted)] mb-4">
-          Invite colleagues to join your organization on StartupOS.
-        </p>
-        <div className="flex items-center gap-2">
-          <input
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            type="email"
-            placeholder="colleague@company.com"
-            className="sos-input flex-1"
-            onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-          />
-          <div className="relative">
-            <select className="sos-input w-40 appearance-none pr-7">
-              <option>Team Member</option>
-              <option>Sales Manager</option>
-              <option>Project Manager</option>
-              <option>Admin</option>
-            </select>
-            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--foreground-subtle)] pointer-events-none" />
+      {/* Add New Employee (Owner Only) */}
+      {user?.role === "owner" && (
+        <div className="sos-card p-5">
+          <h2 className="text-[14px] font-semibold text-[var(--foreground)] mb-1">Add New Employee</h2>
+          <p className="text-[12.5px] text-[var(--foreground-muted)] mb-4">
+            Add a new employee to your organization.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <input
+              value={inviteName}
+              onChange={(e) => setInviteName(e.target.value)}
+              type="text"
+              placeholder="Full Name"
+              className="sos-input flex-1 w-full"
+            />
+            <input
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              type="email"
+              placeholder="employee@company.com"
+              className="sos-input flex-1 w-full"
+              onKeyDown={(e) => e.key === "Enter" && handleInvite()}
+            />
+            <div className="relative w-full sm:w-auto">
+              <select 
+                className="sos-input w-full sm:w-40 appearance-none pr-7"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as UserRole)}
+              >
+                {ASSIGNABLE_ROLES.map(role => (
+                  <option key={role} value={role}>{roleConfig[role].label}</option>
+                ))}
+              </select>
+              <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--foreground-subtle)] pointer-events-none" />
+            </div>
+            <button onClick={handleInvite} disabled={inviting} className="sos-btn sos-btn-primary flex-shrink-0 w-full sm:w-auto cursor-pointer">
+              <Plus size={13} />
+              {inviting ? "Adding..." : "Add Employee"}
+            </button>
           </div>
-          <button onClick={handleInvite} disabled={inviting} className="sos-btn sos-btn-primary flex-shrink-0">
-            <Plus size={13} />
-            {inviting ? "Sending..." : "Invite"}
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Members list */}
       <div className="sos-card overflow-hidden">

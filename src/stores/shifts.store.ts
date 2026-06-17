@@ -61,6 +61,14 @@ const INITIAL_MOCK_SHIFTS: Shift[] = [
     durationSeconds: 31500, // 8.75 hours
     isCompleted: true,
   },
+  {
+    id: "shift_8",
+    userId: "user_6", // bombersam
+    startTime: "2026-06-16T10:00:00.000Z",
+    endTime: "2026-06-16T14:00:00.000Z",
+    durationSeconds: 14400, // 4 hours
+    isCompleted: true,
+  },
 ];
 
 interface ShiftsState {

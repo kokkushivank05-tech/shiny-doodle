@@ -39,6 +39,7 @@ export type UserRole =
   | "sales_manager"
   | "project_manager"
   | "team_member"
+  | "intern"
   | "client";
 
 export interface User extends BaseEntity {
@@ -399,4 +400,21 @@ export interface Shift {
   endTime?: string;  // ISO string
   durationSeconds: number;
   isCompleted: boolean;
+}
+
+// ─── CRM Chat Types ───────────────────────────────────────────
+export interface PingedEntity {
+  type: "lead" | "project" | "deal" | "task";
+  id: string;
+  name: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  recipientId?: string; // If undefined, it is a public channel message
+  content: string;
+  timestamp: string; // ISO string
+  pingedEntities?: PingedEntity[];
 }

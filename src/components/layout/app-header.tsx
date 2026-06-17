@@ -22,12 +22,14 @@ import {
   FolderKanban,
   Play,
   Square,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { useShiftsStore } from "@/stores/shifts.store";
+import { useChatStore } from "@/stores/chat.store";
 import { mockNotifications, mockUsers } from "@/lib/mock-data";
 import { getInitials, formatRelativeTime } from "@/lib/utils";
 import { toast } from "sonner";
@@ -261,8 +263,11 @@ function UserMenu({
     { icon: User, label: "Profile", href: "/settings/profile" },
     { icon: Settings, label: "Settings", href: "/settings/organization" },
     { icon: Shield, label: "Members & Roles", href: "/settings/members" },
-    { icon: CreditCard, label: "Billing", href: "/settings/billing" },
   ];
+
+  if (user?.role === "owner") {
+    menuItems.push({ icon: CreditCard, label: "Billing", href: "/settings/billing" });
+  }
 
   return (
     <div
@@ -474,6 +479,7 @@ export function AppHeader() {
   const { theme } = useUIStore();
   const { user } = useAuthStore();
   const { activeShifts, shifts, clockIn, clockOut } = useShiftsStore();
+  const { setIsOpen: setChatIsOpen } = useChatStore();
   const activeShift = user ? activeShifts.find((s) => s.userId === user.id) : null;
   const isClockedIn = !!activeShift;
 
@@ -652,6 +658,17 @@ export function AppHeader() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Chat Toggle Button */}
+        {user && (
+          <button
+            onClick={() => setChatIsOpen(true)}
+            className="sos-btn sos-btn-ghost p-1.5 text-[var(--foreground-muted)] hover:text-[var(--foreground)] cursor-pointer"
+            aria-label="Open Chat"
+          >
+            <MessageSquare size={16} />
+          </button>
         )}
 
         {/* Notifications */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Camera, Save } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth.store";
@@ -11,12 +11,30 @@ export default function ProfileSettingsPage() {
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [saving, setSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
     setSaving(true);
     await new Promise((r) => setTimeout(r, 800));
     setSaving(false);
     toast.success("Profile updated successfully");
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be less than 5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarUrl(e.target?.result as string);
+        toast.success("Profile photo updated");
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -26,17 +44,34 @@ export default function ProfileSettingsPage() {
         <h2 className="text-[14px] font-semibold text-[var(--foreground)] mb-4">Profile Picture</h2>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center text-[20px] font-bold text-white">
-              {user ? getInitials(user.displayName) : "U"}
+            <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center text-[20px] font-bold text-white overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                user ? getInitials(user.displayName) : "U"
+              )}
             </div>
-            <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--primary)] rounded-full flex items-center justify-center shadow-md hover:bg-[var(--primary-hover)] transition-colors">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute -bottom-1 -right-1 w-6 h-6 bg-[var(--primary)] rounded-full flex items-center justify-center shadow-md hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+            >
               <Camera size={11} className="text-white" />
             </button>
           </div>
           <div>
             <p className="text-[13px] font-medium text-[var(--foreground)]">{user?.displayName}</p>
             <p className="text-[12px] text-[var(--foreground-muted)] capitalize">{user?.role.replace("_", " ")}</p>
-            <button className="mt-1 text-[12px] text-[var(--primary)] hover:underline">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handleFileChange} 
+            />
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-1 text-[12px] text-[var(--primary)] hover:underline cursor-pointer"
+            >
               Upload new photo
             </button>
           </div>

@@ -15,7 +15,7 @@ import type {
 } from "@/types";
 
 const ORG_ID = "org_1";
-const USER_IDS = ["user_1", "user_2", "user_3", "user_4", "user_5"];
+const USER_IDS = ["user_1", "user_2", "user_3", "user_4", "user_5", "user_6"];
 
 export const mockUsers: User[] = [
   {
@@ -140,6 +140,31 @@ export const mockUsers: User[] = [
       dealUpdates: false,
       mentions: true,
       dueDates: false,
+      comments: false,
+    },
+  },
+  {
+    id: "user_6",
+    organizationId: ORG_ID,
+    firebaseUid: "firebase_6",
+    email: "allahhuakbar@gmail.com",
+    displayName: "Bomber Sam",
+    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=bombersam`,
+    role: "intern",
+    isActive: true,
+    lastSeenAt: new Date().toISOString(),
+    createdBy: "user_1",
+    updatedBy: "user_1",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    notificationPreferences: {
+      inApp: true,
+      email: true,
+      push: false,
+      taskAssigned: true,
+      dealUpdates: false,
+      mentions: true,
+      dueDates: true,
       comments: false,
     },
   },

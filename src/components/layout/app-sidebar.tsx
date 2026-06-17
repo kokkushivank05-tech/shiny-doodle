@@ -16,12 +16,14 @@ import {
   Plus,
   Building2,
   Target,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { getInitials } from "@/lib/utils";
 import { NewDealSheet } from "@/components/shared/new-deal-sheet";
+import { useChatStore } from "@/stores/chat.store";
 
 const navGroups = [
   {
@@ -90,6 +92,14 @@ const RESTRICTED_ROUTES: Record<string, string[]> = {
     "/settings/members",
     "/settings/billing",
   ],
+  intern: [
+    "/leads",
+    "/customers",
+    "/workflow",
+    "/settings/organization",
+    "/settings/members",
+    "/settings/billing",
+  ],
 };
 
 export function AppSidebar() {
@@ -100,6 +110,7 @@ export function AppSidebar() {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const { isOpen: chatIsOpen, setIsOpen: setChatIsOpen } = useChatStore();
 
   useEffect(() => {
     setMounted(true);
